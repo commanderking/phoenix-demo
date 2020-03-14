@@ -6,27 +6,27 @@ type Message = {
   text: String;
 };
 
-type Action =
-  | { type: "new_msg"; payload: Message }
-  | { type: "new_join"; payload: Attendee };
-
 type Attendee = {
   name: String;
 };
+
+type Action =
+  | { type: "new_msg"; payload: Message }
+  | { type: "NEW_JOIN"; payload: Attendee };
 
 type State = {
   messages: Message[];
   attendees: Attendee[];
 };
 
-const initialState = [{ messages: [], attendees: [] }];
+const initialState = { messages: [], attendees: [] };
 
 const channelReducer = (state: State, action: Action) => {
   console.log("action", action);
   switch (action.type) {
     case "new_msg":
       return { ...state, messages: [...state.messages, action.payload] };
-    case "new_join":
+    case "NEW_JOIN":
       return { ...state, attendees: [...state.attendees, action.payload] };
     default:
       return "";

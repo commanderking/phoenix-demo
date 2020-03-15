@@ -6,11 +6,10 @@ defmodule ElixirHelloWeb.RoomChannel do
     alias ElixirHelloWeb.Presence
 
     def join("room:lobby", message, socket) do
-      Logger.info(message["params"]["token"])
-      Logger.info(message["params"]["name"])
+      name = message["params"]["name"]
 
       send(self(), :after_join)
-      {:ok, %{user_id: "123"}, assign(socket, :user_id, "123")}
+      {:ok, %{name: "name"}, assign(socket, :name, name)}
     end
     def join("room:" <> _private_room_id, _params, _socket) do
       {:error, %{reason: "unauthorized"}}
@@ -27,18 +26,13 @@ defmodule ElixirHelloWeb.RoomChannel do
     end
 
     def handle_info(:after_join, socket) do
-      push socket, "presence_state", Presence.list(socket)
+      # push socket, "presence_state", Presence.list(socket)
+      broadcast!(socket, "presence_state", %{ list: Presence.list(socket)})
 
-      userTest = socket.assigns[:user_id]
-      Logger.info(userTest)
-      user = %{
-        id: 123,
-        username: "Jeff"
-      }
+      name = socket.assigns[:name]
 
-      {:ok, _} = Presence.track(socket, "user:#{user.id}", %{
-        user_id: user.id,
-        username: user.username
+      {:ok, _} = Presence.track(socket, "user", %{
+        name: name
       })
       {:noreply, socket}
     end

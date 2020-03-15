@@ -7,7 +7,12 @@ const channelActions = {
   NEW_JOIN: "NEW_JOIN"
 };
 
-const useChannel = (channelTopic: string, reducer: any, initialState: any) => {
+const useChannel = (
+  channelTopic: string,
+  reducer: any,
+  initialState: any,
+  name: string
+) => {
   const socket = useContext(SocketContext);
   console.log("socket", socket);
   const [state, dispatch]: [any, any] = useReducer(reducer, initialState);
@@ -17,18 +22,14 @@ const useChannel = (channelTopic: string, reducer: any, initialState: any) => {
     socket.connect();
 
     const channel = socket.channel(channelTopic, {
-      params: { token: "abc", name: "Jeff" }
+      params: { name }
     });
-    // channel.onMessage = (event, payload) => {
-    //   dispatch({ event, payload });
-    //   return payload;
-    // };
 
     channel
       .join()
       .receive("ok", resp => {
         console.log("Join Successfully", resp);
-        channel.push("new_join", { body: { name: "Jeff" } });
+        channel.push("new_join", { body: { name } });
       })
       .receive("error", ({ reason }) => {
         console.error("failed to join channel", reason);
@@ -40,6 +41,10 @@ const useChannel = (channelTopic: string, reducer: any, initialState: any) => {
     });
 
     channel.on("presence_diff", response => {
+      console.log("response", response);
+    });
+
+    channel.on("presence_state", response => {
       console.log("response", response);
     });
 

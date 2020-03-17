@@ -1,24 +1,21 @@
 import { useContext, useReducer, useEffect } from "react";
 import SocketContext from "./SocketContext";
-import { Presence } from "phoenix";
-
-const channelActions = {
-  NEW_MSG: "NEW_MSG",
-  NEW_JOIN: "NEW_JOIN"
-};
+import { ChannelState } from "./ChannelReducer";
+import { channelActions, ChannelActions } from "./ChannelActions";
 
 const useChannel = (
   channelTopic: string,
-  reducer: any,
-  initialState: any,
+  reducer: (state: ChannelState, action: ChannelActions) => ChannelState,
+  initialState: ChannelState,
   name: string
 ) => {
   const socket = useContext(SocketContext);
-  console.log("socket", socket);
-  const [state, dispatch]: [any, any] = useReducer(reducer, initialState);
+  const [state, dispatch]: [ChannelState, any] = useReducer(
+    reducer,
+    initialState
+  );
 
   useEffect(() => {
-    console.log("channelTopic", channelTopic);
     socket.connect();
 
     const channel = socket.channel(channelTopic, {
@@ -28,7 +25,6 @@ const useChannel = (
     channel
       .join()
       .receive("ok", resp => {
-        console.log("Join Successfully", resp);
         channel.push("new_join", { body: { name } });
       })
       .receive("error", ({ reason }) => {
@@ -36,20 +32,19 @@ const useChannel = (
       });
 
     channel.on("new_join", payload => {
-      console.log("new join payload", payload);
-      dispatch({ type: channelActions.NEW_JOIN, payload: payload.body });
-    });
-
-    channel.on("presence_diff", response => {
-      console.log("response", response);
+      console.log("new_join_payload", payload);
+      // dispatch({ type: channelActions.NEW_JOIN, payload: payload.body });
     });
 
     channel.on("presence_state", response => {
-      console.log("response", response);
+      console.log("presence_State", response);
+      dispatch({
+        type: channelActions.UPDATE_PRESENCE_STATE,
+        payload: (response.user && response.user.metas) || []
+      });
     });
 
     return () => {
-      console.log("leaving");
       channel.leave();
     };
   }, [channelTopic, socket]);

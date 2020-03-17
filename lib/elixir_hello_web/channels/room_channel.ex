@@ -1,5 +1,5 @@
 require Logger
-
+import Ecto
 defmodule ElixirHelloWeb.RoomChannel do
 
     use Phoenix.Channel
@@ -9,14 +9,18 @@ defmodule ElixirHelloWeb.RoomChannel do
       name = message["params"]["name"]
 
       send(self(), :after_join)
-      {:ok, %{name: "name"}, assign(socket, :name, name)}
+      uuid = Ecto.UUID.generate
+      {:ok, %{name: "name", users: Presence.list(socket) }, assign(socket, :user_data, %{ name: name, uuid: uuid})}
     end
     def join("room:" <> _private_room_id, _params, _socket) do
       {:error, %{reason: "unauthorized"}}
     end
  
-    def handle_in("new_join", %{"body" => body}, socket) do 
-      broadcast!(socket, "new_join", %{body: body})
+    def handle_in("new_join", %{"body" => body}, socket) do
+      uuid = socket.assigns[:user_data][:uuid]
+      Logger.info(uuid)
+      name = socket.assigns[:user_data][:name]
+      broadcast!(socket, "new_join", %{user_data: %{ name: name, uuid: uuid} })
       {:noreply, socket}
     end
 
@@ -26,13 +30,17 @@ defmodule ElixirHelloWeb.RoomChannel do
     end
 
     def handle_info(:after_join, socket) do
-      # push socket, "presence_state", Presence.list(socket)
-      broadcast!(socket, "presence_state", %{ list: Presence.list(socket)})
+      push socket, "presence_state", Presence.list(socket)
+      # broadcast!(socket, "presence_state", %{ list: Presence.list(socket)})
 
-      name = socket.assigns[:name]
+      name = socket.assigns[:user_data][:name]
+      uuid = socket.assigns[:user_data][:uuid]
+
+      IO.inspect socket.assigns
 
       {:ok, _} = Presence.track(socket, "user", %{
-        name: name
+        name: name,
+        uuid: uuid
       })
       {:noreply, socket}
     end

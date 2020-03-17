@@ -18,7 +18,6 @@ defmodule ElixirHelloWeb.RoomChannel do
  
     def handle_in("new_join", %{"body" => body}, socket) do
       uuid = socket.assigns[:user_data][:uuid]
-      Logger.info(uuid)
       name = socket.assigns[:user_data][:name]
       broadcast!(socket, "new_join", %{user_data: %{ name: name, uuid: uuid} })
       {:noreply, socket}
@@ -35,8 +34,6 @@ defmodule ElixirHelloWeb.RoomChannel do
 
       name = socket.assigns[:user_data][:name]
       uuid = socket.assigns[:user_data][:uuid]
-
-      IO.inspect socket.assigns
 
       {:ok, _} = Presence.track(socket, "user", %{
         name: name,

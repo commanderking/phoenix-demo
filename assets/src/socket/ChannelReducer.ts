@@ -20,6 +20,8 @@ export const channelReducer = (state: ChannelState, action: ChannelActions) => {
       return { ...state, messages: [...state.messages, action.payload] };
     case channelActions.NEW_JOIN:
       return { ...state, attendees: [...state.attendees, action.payload] };
+    case channelActions.USER_LEAVE:
+      return { ...state, attendees: [...state.attendees, action.payload] };
     case channelActions.UPDATE_PRESENCE_STATE:
       return { ...state, attendees: action.payload };
     default:

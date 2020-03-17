@@ -32,12 +32,10 @@ const useChannel = (
       });
 
     channel.on("new_join", payload => {
-      console.log("new_join_payload", payload);
-      // dispatch({ type: channelActions.NEW_JOIN, payload: payload.body });
+      dispatch({ type: channelActions.NEW_JOIN, payload: payload.user_data });
     });
 
     channel.on("presence_state", response => {
-      console.log("presence_State", response);
       dispatch({
         type: channelActions.UPDATE_PRESENCE_STATE,
         payload: (response.user && response.user.metas) || []

@@ -1,37 +1,58 @@
 import { useContext, useReducer, useEffect } from "react";
 import SocketContext from "./SocketContext";
+import { ChannelState } from "./ChannelReducer";
+import { channelActions, ChannelActions } from "./ChannelActions";
+import { Presence } from "phoenix";
 
-const useChannel = (channelTopic: string, reducer: any, initialState: any) => {
+const useChannel = (
+  channelTopic: string,
+  reducer: (state: ChannelState, action: ChannelActions) => ChannelState,
+  initialState: ChannelState,
+  name: string
+) => {
   const socket = useContext(SocketContext);
-  console.log("socket", socket);
-  const [state, dispatch]: [any, any] = useReducer(reducer, initialState);
+  const [state, dispatch]: [ChannelState, any] = useReducer(
+    reducer,
+    initialState
+  );
 
   useEffect(() => {
-    console.log("channelTopic", channelTopic);
     socket.connect();
 
-    const channel = socket.channel(channelTopic, { params: { token: "abc" } });
-    // channel.onMessage = (event, payload) => {
-    //   dispatch({ event, payload });
-    //   return payload;
-    // };
+    const channel = socket.channel(channelTopic, {
+      params: { name }
+    });
+
+    const presence = new Presence(channel);
 
     channel
       .join()
       .receive("ok", resp => {
-        console.log("Join Successfully", resp);
-        channel.push("new_join", { body: "New Member Joined" });
+        channel.push("new_join", { body: { name } });
       })
       .receive("error", ({ reason }) => {
         console.error("failed to join channel", reason);
       });
 
     channel.on("new_join", payload => {
-      console.log("new join payload", payload);
+      // dispatch({ type: channelActions.NEW_JOIN, payload: payload.user_data });
+    });
+
+    channel.on("presence_diff", response => {
+      console.log("presenece_diff response", response);
+    });
+
+    presence.onSync(() => {
+      presence.list((id, { metas }) => {
+        dispatch({
+          type: channelActions.SYNC_PRESENCE,
+          payload: metas
+        });
+      });
     });
 
     return () => {
-      console.log("leaving");
+      channel.push("user_leave", {});
       channel.leave();
     };
   }, [channelTopic, socket]);

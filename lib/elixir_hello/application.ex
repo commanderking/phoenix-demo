@@ -11,9 +11,10 @@ defmodule ElixirHello.Application do
       # Start the Ecto repository
       ElixirHello.Repo,
       # Start the endpoint when the application starts
-      ElixirHelloWeb.Endpoint
+      ElixirHelloWeb.Endpoint,
       # Starts a worker by calling: ElixirHello.Worker.start_link(arg)
       # {ElixirHello.Worker, arg},
+      ElixirHelloWeb.Presence
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

@@ -19,7 +19,6 @@ const Lobby = ({ name }: Props) => {
 
   return (
     <SocketProvider>
-      <div>Container</div>
       <LobbyUsers channelState={channelState} />
     </SocketProvider>
   );

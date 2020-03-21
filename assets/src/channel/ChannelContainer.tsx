@@ -8,6 +8,8 @@ const ChannelContainer = () => {
   if (!name) {
     return (
       <div>
+        <h3>Choose a Name</h3>
+
         <form>
           <input
             value={typedName || ""}

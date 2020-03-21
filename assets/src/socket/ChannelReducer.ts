@@ -24,6 +24,8 @@ export const channelReducer = (state: ChannelState, action: ChannelActions) => {
       return { ...state, attendees: [...state.attendees, action.payload] };
     case channelActions.UPDATE_PRESENCE_STATE:
       return { ...state, attendees: action.payload };
+    case channelActions.SYNC_PRESENCE:
+      return { ...state, attendees: action.payload };
     default:
       throw new Error("Non valid Action");
   }

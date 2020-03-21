@@ -8,7 +8,7 @@ type Props = {
 const LobbyUsers = ({ channelState }: Props) => {
   return (
     <div>
-      <h1>Other Attendees</h1>
+      <h4>Attendees</h4>
       <ul>
         {channelState.attendees.map(attendee => {
           return <div>{attendee.name}</div>;

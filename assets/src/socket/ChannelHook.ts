@@ -4,6 +4,12 @@ import { ChannelState } from "./ChannelReducer";
 import { channelActions, ChannelActions } from "./ChannelActions";
 import { Presence } from "phoenix";
 
+type Meta = {
+  id: string;
+  phx_ref: string;
+  name: string;
+};
+
 const useChannel = (
   channelTopic: string,
   reducer: (state: ChannelState, action: ChannelActions) => ChannelState,
@@ -35,13 +41,36 @@ const useChannel = (
       });
 
     channel.on("new_join", payload => {
-      // dispatch({ type: channelActions.NEW_JOIN, payload: payload.user_data });
+      const { user_data } = payload;
+      dispatch({
+        type: channelActions.USER_JOIN,
+        payload: { ...user_data, actionType: channelActions.USER_JOIN }
+      });
     });
 
-    channel.on("presence_diff", response => {
-      console.log("presenece_diff response", response);
+    // Wanted to use presence_diff for the "joins" case as well, but the joins that are returned is
+    // always the entire list of people who have joined since the beginning of the channel start
+    // maybe this would be useful for an entire history of the order folks joined, but less useful if
+    // we want to keep a timeline of when people joined and left
+    channel.on("presence_diff", presenceDiff => {
+      const { joins, leaves } = presenceDiff;
+      const getMetasWithActionType = (metas: Meta[]) =>
+        metas.map((meta: Meta) => {
+          return {
+            ...meta,
+            userAction: channelActions.USER_LEAVE
+          };
+        });
+
+      if (leaves?.user?.metas) {
+        dispatch({
+          type: channelActions.USER_LEAVE,
+          payload: getMetasWithActionType(leaves.user.metas)
+        });
+      }
     });
 
+    // presence list is the complete list of everyone whos in the channel
     presence.onSync(() => {
       presence.list((id, { metas }) => {
         dispatch({
@@ -50,6 +79,13 @@ const useChannel = (
         });
       });
     });
+
+    // Thought we could hook into here, but // current returns just the current user of teh socket
+    // newPres returns the entire presence for everyone who's joined, not just of the new join
+    // presence.onJoin((id, current, newPres) => {
+    //   console.log("current", current);
+    //   console.log("newPres", newPres);
+    // });
 
     return () => {
       channel.push("user_leave", {});

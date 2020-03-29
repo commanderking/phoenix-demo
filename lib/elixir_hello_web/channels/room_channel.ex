@@ -23,10 +23,12 @@ defmodule ElixirHelloWeb.RoomChannel do
       {:noreply, socket}
     end
 
-    def handle_in("new_msg", %{"body" => body}, socket) do
-      broadcast!(socket, "new_msg", %{body: body})
+    def handle_in("new_msg", %{"text" => text}, socket) do
+      name = socket.assigns[:user_data][:name]
+      broadcast!(socket, "new_msg", %{text: text, name: name })
       {:noreply, socket}
     end
+
 
     def handle_info(:after_join, socket) do
       push socket, "presence_state", Presence.list(socket)

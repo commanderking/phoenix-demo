@@ -1,4 +1,4 @@
-import { useContext, useReducer, useEffect } from "react";
+import { useContext, useReducer, useEffect, useState } from "react";
 import SocketContext from "./SocketContext";
 import { ChannelState } from "./ChannelReducer";
 import { channelActions, ChannelActions } from "./ChannelActions";
@@ -22,6 +22,9 @@ const useChannel = (
     initialState
   );
 
+  // @ts-ignore
+  const [lobbyChannel, setLobbyChannel] = useState("");
+
   useEffect(() => {
     socket.connect();
 
@@ -35,6 +38,8 @@ const useChannel = (
       .join()
       .receive("ok", resp => {
         channel.push("new_join", { body: { name } });
+        // @ts-ignore
+        setLobbyChannel(channel);
       })
       .receive("error", ({ reason }) => {
         console.error("failed to join channel", reason);
@@ -45,6 +50,17 @@ const useChannel = (
       dispatch({
         type: channelActions.USER_JOIN,
         payload: { ...user_data, actionType: channelActions.USER_JOIN }
+      });
+    });
+
+    channel.on("new_msg", payload => {
+      const { text, name } = payload;
+      dispatch({
+        type: channelActions.NEW_MSG,
+        payload: {
+          text,
+          name
+        }
       });
     });
 
@@ -80,7 +96,7 @@ const useChannel = (
       });
     });
 
-    // Thought we could hook into here, but // current returns just the current user of teh socket
+    // Thought we could hook into onJoin to add users as they joined, but // current returns just the current user of teh socket
     // newPres returns the entire presence for everyone who's joined, not just of the new join
     // presence.onJoin((id, current, newPres) => {
     //   console.log("current", current);
@@ -93,7 +109,7 @@ const useChannel = (
     };
   }, [channelTopic, socket]);
 
-  return state;
+  return { channelState: state, channel: lobbyChannel };
 };
 
 export default useChannel;

@@ -3,6 +3,7 @@ import React from "react";
 import useChannel from "../socket/ChannelHook";
 import LobbyUsers from "./LobbyUsers";
 import LobbyHistory from "./LobbyHistory";
+import Messages from "./Messages";
 import { channelReducer } from "../socket/ChannelReducer";
 const initialState = { messages: [], attendees: [], userLobbyActions: [] };
 
@@ -11,7 +12,7 @@ type Props = {
 };
 
 const Lobby = ({ name }: Props) => {
-  const channelState = useChannel(
+  const { channelState, channel } = useChannel(
     "room:lobby",
     channelReducer,
     initialState,
@@ -22,6 +23,7 @@ const Lobby = ({ name }: Props) => {
     <SocketProvider>
       <LobbyUsers channelState={channelState} />
       <LobbyHistory channelState={channelState} />
+      <Messages channelState={channelState} channel={channel} />
     </SocketProvider>
   );
 };

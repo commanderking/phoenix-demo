@@ -2,6 +2,7 @@ import { channelActions, ChannelActions } from "./ChannelActions";
 
 export type Message = {
   text: string;
+  name: string;
 };
 
 export type Attendee = {
